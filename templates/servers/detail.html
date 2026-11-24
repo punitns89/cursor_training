@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}{{ server.name }}{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <div>
+    <h1>{{ server.name }}</h1>
+    <p class="subtitle" style="margin:0">
+      {{ server.host }}:{{ server.port }} · {{ server.ssh_username }}
+      {% if server.tags %} · {{ server.tags }}{% endif %}
+    </p>
+  </div>
+  <div class="actions">
+    {% if metrics %}
+      <span class="badge {{ metrics.status }}">{{ metrics.status }}</span>
+    {% else %}
+      <span class="badge unknown">unknown</span>
+    {% endif %}
+    <form class="inline-form" method="post" action="{{ url_for('servers.refresh_server', server_id=server.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-primary">Refresh now</button>
+    </form>
+    <a class="btn" href="{{ url_for('servers.edit_server', server_id=server.id) }}">Edit</a>
+  </div>
+</div>
+
+{% if metrics and metrics.error_message %}
+  <div class="flash error">{{ metrics.error_message }}</div>
+{% endif %}
+
+{% if not metrics %}
+  <div class="empty">
+    <p>No metrics collected yet. Use <strong>Refresh now</strong> or wait for the 5-minute poll.</p>
+  </div>
+{% else %}
+  <p class="meta">Last collected: {{ metrics.collected_at }}</p>
+
+  <div class="detail-grid">
+    <div class="card">
+      <span class="label meta">CPU</span>
+      <div class="value" style="font-size:1.6rem;font-weight:650">
+        {% if metrics.cpu_percent is not none %}{{ metrics.cpu_percent }}%{% else %}—{% endif %}
+      </div>
+    </div>
+    <div class="card">
+      <span class="label meta">Memory</span>
+      <div class="value" style="font-size:1.6rem;font-weight:650">
+        {% if metrics.memory_percent is not none %}{{ metrics.memory_percent }}%{% else %}—{% endif %}
+      </div>
+      <p class="meta">
+        {% if metrics.memory_used_mb is not none and metrics.memory_total_mb is not none %}
+          {{ metrics.memory_used_mb }} / {{ metrics.memory_total_mb }} MB
+        {% endif %}
+      </p>
+    </div>
+    <div class="card">
+      <span class="label meta">Network RX</span>
+      <div class="value" style="font-size:1.25rem;font-weight:650">
+        {% if metrics.network_rx_bytes is not none %}{{ metrics.network_rx_bytes }} B{% else %}—{% endif %}
+      </div>
+    </div>
+    <div class="card">
+      <span class="label meta">Network TX</span>
+      <div class="value" style="font-size:1.25rem;font-weight:650">
+        {% if metrics.network_tx_bytes is not none %}{{ metrics.network_tx_bytes }} B{% else %}—{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <h2 style="font-size:1.1rem;margin-top:1.5rem">Listening ports</h2>
+  {% if ports %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Address</th><th>Port</th></tr>
+        </thead>
+        <tbody>
+          {% for p in ports %}
+            <tr>
+              <td>{{ p.address }}</td>
+              <td>{{ p.port }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty"><p>No listening ports reported.</p></div>
+  {% endif %}
+{% endif %}
+{% endblock %}

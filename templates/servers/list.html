@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Servers{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <div>
+    <h1>Servers</h1>
+    <p class="subtitle" style="margin:0">Manage Linux hosts to monitor over SSH.</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('servers.add_server') }}">Add server</a>
+</div>
+
+{% if not servers %}
+  <div class="empty">
+    <p>No servers registered.</p>
+    <p><a class="btn btn-primary" href="{{ url_for('servers.add_server') }}">Add your first server</a></p>
+  </div>
+{% else %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Host</th>
+          <th>Port</th>
+          <th>User</th>
+          <th>Tags</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in servers %}
+          <tr>
+            <td><a href="{{ url_for('main.server_detail', server_id=s.id) }}">{{ s.name }}</a></td>
+            <td>{{ s.host }}</td>
+            <td>{{ s.port }}</td>
+            <td>{{ s.ssh_username }}</td>
+            <td>{{ s.tags or "—" }}</td>
+            <td>
+              {% if s.metrics %}
+                <span class="badge {{ s.metrics.status }}">{{ s.metrics.status }}</span>
+              {% else %}
+                <span class="badge unknown">unknown</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="actions">
+                <a class="btn" href="{{ url_for('servers.edit_server', server_id=s.id) }}">Edit</a>
+                <form class="inline-form" method="post" action="{{ url_for('servers.delete_server', server_id=s.id) }}"
+                      onsubmit="return confirm('Delete server {{ s.name }}?');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endif %}
+{% endblock %}

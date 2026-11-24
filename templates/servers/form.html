@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<h1>{{ title }}</h1>
+<p class="subtitle">SSH credentials are stored locally and never shown back in the UI.</p>
+
+<div class="form-card">
+  <form method="post" novalidate>
+    {{ form.hidden_tag() }}
+    <div class="form-group">
+      {{ form.name.label }}
+      {{ form.name() }}
+      {% for e in form.name.errors %}<div class="error">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="form-group">
+      {{ form.host.label }}
+      {{ form.host() }}
+      {% for e in form.host.errors %}<div class="error">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="form-group">
+      {{ form.port.label }}
+      {{ form.port() }}
+      {% for e in form.port.errors %}<div class="error">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="form-group">
+      {{ form.ssh_username.label }}
+      {{ form.ssh_username() }}
+      {% for e in form.ssh_username.errors %}<div class="error">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="form-group">
+      {{ form.ssh_password.label }}
+      {{ form.ssh_password(autocomplete="new-password", placeholder="Leave blank on edit to keep existing") }}
+      {% for e in form.ssh_password.errors %}<div class="error">{{ e }}</div>{% endfor %}
+      <p class="hint">Provide a password <strong>or</strong> a private key (at least one required).</p>
+    </div>
+    <div class="form-group">
+      {{ form.ssh_private_key.label }}
+      {{ form.ssh_private_key(placeholder="-----BEGIN ... PRIVATE KEY-----") }}
+      {% for e in form.ssh_private_key.errors %}<div class="error">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="form-group">
+      {{ form.tags.label }}
+      {{ form.tags(placeholder="dev, staging") }}
+      {% for e in form.tags.errors %}<div class="error">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" type="submit">Save</button>
+      <a class="btn" href="{{ url_for('servers.list_servers') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

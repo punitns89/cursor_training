@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h1>Dashboard</h1>
+<p class="subtitle">Latest metrics across registered Linux servers (read-only). Polls every 5 minutes.</p>
+
+{% if not cards %}
+  <div class="empty">
+    <p>No servers yet.</p>
+    <p><a class="btn btn-primary" href="{{ url_for('servers.add_server') }}">Add a server</a></p>
+  </div>
+{% else %}
+  <div class="card-grid">
+    {% for card in cards %}
+      <a class="card" href="{{ url_for('main.server_detail', server_id=card.server.id) }}" style="color:inherit">
+        <div class="toolbar" style="margin:0">
+          <h2>{{ card.server.name }}</h2>
+          <span class="badge {{ card.status }}">{{ card.status }}</span>
+        </div>
+        <p class="meta">{{ card.server.host }}{% if card.server.tags %} · {{ card.server.tags }}{% endif %}</p>
+        <div class="metrics-row">
+          <div class="metric">
+            <span class="label">CPU</span>
+            <span class="value">{% if card.cpu_percent is not none %}{{ card.cpu_percent }}%{% else %}—{% endif %}</span>
+          </div>
+          <div class="metric">
+            <span class="label">Memory</span>
+            <span class="value">{% if card.memory_percent is not none %}{{ card.memory_percent }}%{% else %}—{% endif %}</span>
+          </div>
+        </div>
+        <p class="meta" style="margin-top:0.75rem">
+          {% if card.collected_at %}Updated {{ card.collected_at }}{% else %}No sample yet{% endif %}
+        </p>
+        {% if card.error_message %}
+          <p class="meta" style="color:var(--danger)">{{ card.error_message }}</p>
+        {% endif %}
+      </a>
+    {% endfor %}
+  </div>
+{% endif %}
+{% endblock %}
