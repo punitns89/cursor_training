@@ -35,6 +35,10 @@ def test_dashboard_and_detail_with_metrics(auth_client, app):
     assert dash.status_code == 200
     assert b"web" in dash.data
     assert b"11.0" in dash.data or b"11%" in dash.data or b"11.0%" in dash.data
+    assert b"chartCpuBar" in dash.data
+    assert b"chartMemBar" in dash.data
+    assert b"chartCpuLine" in dash.data
+    assert b"chart.js" in dash.data
 
     detail = auth_client.get(f"/servers/{sid}")
     assert detail.status_code == 200

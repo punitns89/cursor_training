@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+from datetime import datetime, timezone
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -35,6 +36,7 @@ def start_scheduler(app) -> None:
 
             collect_all_servers()
 
+    # Run once immediately, then every interval (avoids "unknown" for 5 minutes)
     scheduler.add_job(
         job,
         "interval",
@@ -42,6 +44,7 @@ def start_scheduler(app) -> None:
         id="collect_metrics",
         replace_existing=True,
         max_instances=1,
+        next_run_time=datetime.now(timezone.utc),
     )
     scheduler.start()
     _scheduler = scheduler

@@ -378,3 +378,62 @@ tr:last-child td {
 .inline-form {
   display: inline;
 }
+
+.section-heading {
+  font-size: 1.15rem;
+  margin: 1.75rem 0 1rem;
+  font-weight: 650;
+}
+
+.charts-section {
+  margin-bottom: 0.5rem;
+}
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.chart-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem 0.85rem;
+}
+
+.chart-card-wide {
+  grid-column: span 2;
+}
+
+.chart-title {
+  margin: 0 0 0.65rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.chart-wrap {
+  position: relative;
+  height: 180px;
+}
+
+.chart-wrap-tall {
+  height: 220px;
+}
+
+.chart-hint {
+  margin: 0.5rem 0 0;
+}
+
+@media (max-width: 720px) {
+  .chart-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-card-wide {
+    grid-column: span 1;
+  }
+}

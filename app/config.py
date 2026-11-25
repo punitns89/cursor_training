@@ -22,6 +22,8 @@ class Config:
 
     # Metric poll interval (seconds)
     METRICS_POLL_INTERVAL_SECONDS = 300  # 5 minutes
+    # Short history retained for dashboard graphs (demo)
+    METRICS_HISTORY_LIMIT = 48
 
     # SSH
     SSH_CONNECT_TIMEOUT = 10

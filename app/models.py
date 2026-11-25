@@ -46,13 +46,36 @@ class Server(db.Model):
         uselist=False,
         cascade="all, delete-orphan",
     )
+    history = db.relationship(
+        "MetricHistory",
+        back_populates="server",
+        cascade="all, delete-orphan",
+        order_by="MetricHistory.collected_at",
+    )
 
     def has_ssh_auth(self) -> bool:
         return bool(self.ssh_password) or bool(self.ssh_private_key)
 
 
+class MetricHistory(db.Model):
+    """Short rolling history for dashboard graphs. No SSH credentials."""
+
+    __tablename__ = "metric_history"
+
+    id = db.Column(db.Integer, primary_key=True)
+    server_id = db.Column(db.Integer, db.ForeignKey("servers.id"), nullable=False, index=True)
+    collected_at = db.Column(db.DateTime, nullable=False, default=utcnow, index=True)
+    status = db.Column(db.String(32), nullable=False, default="ok")
+    cpu_percent = db.Column(db.Float, nullable=True)
+    memory_percent = db.Column(db.Float, nullable=True)
+    network_rx_bytes = db.Column(db.BigInteger, nullable=True)
+    network_tx_bytes = db.Column(db.BigInteger, nullable=True)
+
+    server = db.relationship("Server", back_populates="history")
+
+
 class MetricSnapshot(db.Model):
-    """Latest metrics only (demo). Does not store SSH credentials."""
+    """Latest metrics (demo). Does not store SSH credentials."""
 
     __tablename__ = "metric_snapshots"
 
