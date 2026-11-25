@@ -8,7 +8,7 @@ from flask import current_app
 
 from app.collectors import collect_metrics_via_ssh
 from app.extensions import db
-from app.models import MetricSnapshot, Server, utcnow
+from app.models import MetricHistory, MetricSnapshot, Server, utcnow
 from app.ssh_client import SSHError
 
 logger = logging.getLogger(__name__)
@@ -23,6 +23,34 @@ def _get_or_create_snapshot(server: Server) -> MetricSnapshot:
     return snap
 
 
+def _append_history(server: Server, data: dict) -> None:
+    """Keep a short rolling history for graphs (no credentials)."""
+    db.session.add(
+        MetricHistory(
+            server_id=server.id,
+            collected_at=utcnow(),
+            status=data.get("status", "ok"),
+            cpu_percent=data.get("cpu_percent"),
+            memory_percent=data.get("memory_percent"),
+            network_rx_bytes=data.get("network_rx_bytes"),
+            network_tx_bytes=data.get("network_tx_bytes"),
+        )
+    )
+    limit = int(current_app.config.get("METRICS_HISTORY_LIMIT", 48))
+    # Delete oldest beyond limit for this server
+    old_ids = (
+        MetricHistory.query.filter_by(server_id=server.id)
+        .order_by(MetricHistory.collected_at.desc())
+        .offset(limit)
+        .with_entities(MetricHistory.id)
+        .all()
+    )
+    if old_ids:
+        MetricHistory.query.filter(
+            MetricHistory.id.in_([row[0] for row in old_ids])
+        ).delete(synchronize_session=False)
+
+
 def save_success(server: Server, data: dict) -> MetricSnapshot:
     snap = _get_or_create_snapshot(server)
     snap.collected_at = utcnow()
@@ -35,6 +63,7 @@ def save_success(server: Server, data: dict) -> MetricSnapshot:
     snap.network_rx_bytes = data.get("network_rx_bytes")
     snap.network_tx_bytes = data.get("network_tx_bytes")
     snap.ports_json = data.get("ports_json")
+    _append_history(server, data)
     db.session.commit()
     return snap
 

@@ -10,6 +10,37 @@
     <p><a class="btn btn-primary" href="{{ url_for('servers.add_server') }}">Add a server</a></p>
   </div>
 {% else %}
+  <section class="charts-section" aria-label="Metric graphs">
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h2 class="chart-title">CPU by server</h2>
+        <div class="chart-wrap">
+          <canvas id="chartCpuBar" height="160"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h2 class="chart-title">Memory by server</h2>
+        <div class="chart-wrap">
+          <canvas id="chartMemBar" height="160"></canvas>
+        </div>
+      </div>
+      <div class="chart-card chart-card-wide">
+        <h2 class="chart-title">CPU over time</h2>
+        <div class="chart-wrap chart-wrap-tall">
+          <canvas id="chartCpuLine" height="120"></canvas>
+        </div>
+        <p class="meta chart-hint">Builds as samples are collected (poll or Refresh now).</p>
+      </div>
+      <div class="chart-card chart-card-wide">
+        <h2 class="chart-title">Memory over time</h2>
+        <div class="chart-wrap chart-wrap-tall">
+          <canvas id="chartMemLine" height="120"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <h2 class="section-heading">Servers</h2>
   <div class="card-grid">
     {% for card in cards %}
       <a class="card" href="{{ url_for('main.server_detail', server_id=card.server.id) }}" style="color:inherit">
@@ -37,5 +68,89 @@
       </a>
     {% endfor %}
   </div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if cards %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  const charts = {{ charts_json|safe }};
+  const tickColor = "#8b9bb4";
+  const gridColor = "rgba(45, 58, 77, 0.7)";
+  const commonOpts = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { labels: { color: tickColor } },
+    },
+    scales: {
+      x: {
+        ticks: { color: tickColor, maxRotation: 0 },
+        grid: { color: gridColor },
+      },
+      y: {
+        beginAtZero: true,
+        max: 100,
+        ticks: { color: tickColor, callback: (v) => v + "%" },
+        grid: { color: gridColor },
+      },
+    },
+  };
+
+  function bar(id, label, values, color) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    new Chart(el, {
+      type: "bar",
+      data: {
+        labels: charts.bar_labels,
+        datasets: [{
+          label: label,
+          data: values,
+          backgroundColor: color,
+          borderRadius: 6,
+          maxBarThickness: 48,
+        }],
+      },
+      options: {
+        ...commonOpts,
+        plugins: {
+          legend: { display: false },
+        },
+      },
+    });
+  }
+
+  function line(id, datasets) {
+    const el = document.getElementById(id);
+    if (!el || !charts.has_line_data) {
+      if (el) {
+        el.parentElement.innerHTML = '<p class="meta" style="padding:1rem 0">No history yet — use Refresh now or wait for the next poll.</p>';
+      }
+      return;
+    }
+    new Chart(el, {
+      type: "line",
+      data: {
+        labels: charts.line_labels,
+        datasets: datasets.map((ds) => ({
+          ...ds,
+          fill: false,
+          pointRadius: 3,
+          pointHoverRadius: 5,
+        })),
+      },
+      options: commonOpts,
+    });
+  }
+
+  bar("chartCpuBar", "CPU %", charts.bar_cpu, "rgba(61, 156, 240, 0.75)");
+  bar("chartMemBar", "Memory %", charts.bar_mem, "rgba(62, 207, 142, 0.75)");
+  line("chartCpuLine", charts.cpu_datasets);
+  line("chartMemLine", charts.mem_datasets);
+})();
+</script>
 {% endif %}
 {% endblock %}

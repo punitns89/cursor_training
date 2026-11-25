@@ -41,7 +41,22 @@ def add_server():
         )
         db.session.add(server)
         db.session.commit()
-        flash(f"Server “{server.name}” added.", "success")
+        # Collect once now so status is not stuck on "unknown" until the 5-min poll
+        try:
+            snap = collect_and_store(server)
+            if snap.status == "unreachable":
+                flash(
+                    f"Server “{server.name}” added, but metrics failed: {snap.error_message}",
+                    "error",
+                )
+            else:
+                flash(f"Server “{server.name}” added and metrics collected.", "success")
+        except Exception:
+            flash(
+                f"Server “{server.name}” added. Metrics will appear on the next poll "
+                "or use Refresh now on the detail page.",
+                "info",
+            )
         return redirect(url_for("servers.list_servers"))
     return render_template("servers/form.html", form=form, title="Add server")
 

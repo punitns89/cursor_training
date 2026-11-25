@@ -20,8 +20,9 @@ SSH credentials are stored in the local SQLite DB only and must not be committed
 
 ## View metrics
 
-1. **Dashboard** — status + CPU/memory glance for all hosts
+1. **Dashboard** — status + CPU/memory glance, plus bar/line graphs across hosts
 2. Click a server for **detail**: CPU, memory, network RX/TX, listening ports
 3. Metrics refresh every **5 minutes**, or use **Refresh now** on the detail page
+4. Line graphs use a short rolling history (last ~48 samples per server)
 
 Collection uses read-only remote commands only (see [ssh-commands.md](./ssh-commands.md)).

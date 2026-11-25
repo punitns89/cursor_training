@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 from app.extensions import db
 from app.metrics_service import collect_all_servers, collect_and_store, save_failure, save_success
-from app.models import MetricSnapshot, Server
+from app.models import MetricHistory, MetricSnapshot, Server
 from app.scheduler import get_poll_interval_seconds
 
 
@@ -41,10 +41,13 @@ def test_save_success_and_failure(app):
         assert snap.cpu_percent == 12.5
         # No credential fields on snapshot
         assert not hasattr(snap, "ssh_password")
+        assert MetricHistory.query.filter_by(server_id=sid).count() == 1
 
         snap2 = save_failure(server, "SSH connection failed")
         assert snap2.status == "unreachable"
         assert "SSH" in snap2.error_message
+        # Failures do not append history points
+        assert MetricHistory.query.filter_by(server_id=sid).count() == 1
 
 
 @patch("app.metrics_service.collect_metrics_via_ssh")
